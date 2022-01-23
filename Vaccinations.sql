@@ -1,17 +1,12 @@
--- Preview
-
---SELECT COLUMN_NAME
---FROM INFORMATION_SCHEMA.COLUMNS
---WHERE TABLE_NAME = 'Vaccinations'
+-- Preview OF DATASET
 SELECT TOP(5)
 	country,
 	date,
 	daily_vaccinations
 FROM
-	Vaccinations
+	Vaccinations.dbo.Vaccinations
 
--- Create temp table
-
+-- Create temp table that shows vaccinations of UK countries on a monthly levels
 DROP TABLE IF EXISTS #Monthly_Vaccinations
 CREATE TABLE #Monthly_Vaccinations(
 Country varchar(50),
@@ -26,7 +21,7 @@ SELECT
 	MONTH(date) AS Month,
 	SUM(daily_vaccinations) AS Num_vaccinations
 FROM 
-	Vaccinations
+	Vaccinations.dbo.Vaccinations
 WHERE 
 	-- keep countries in the UK
 	country IN ('England', 'Northern Ireland', 'Scotland', 'Wales')
@@ -50,7 +45,7 @@ SELECT
 FROM 
 	#Monthly_Vaccinations
 
--- Create population table
+-- Create table that show population of each country
 DROP TABLE IF EXISTS Population
 CREATE TABLE Population(
 Country varchar(50),
@@ -67,7 +62,7 @@ VALUES
 SELECT *
 FROM Population
 
--- Which country has been the most successful in administering vaccines
+-- Which country has been the most successful in administering vaccines?
 
 -- CTE for storing running total
 WITH running_total AS(
@@ -109,7 +104,7 @@ WHERE
 ORDER BY 
 	Vaccinations_per_100k_capita DESC
 
---
+-- What is the running total vaccinations?
 
 WITH running_total AS(
 SELECT 
@@ -133,8 +128,7 @@ FROM running_total R
 INNER JOIN Population P
 	ON R.Country = p.Country
 
--- Find percent change in vaccinations from month to month
-
+-- What is the percent change in vaccinations from month to month?
 WITH prev_count AS(
 SELECT *,
 	ISNULL(LAG(num_vaccinations) OVER(PARTITION BY Country ORDER BY Month),0) AS prev_vaccination
@@ -145,8 +139,7 @@ SELECT *,
 FROM prev_count
 
 
--- months with fewest vaccinations in each country
-
+-- Which months registered the fewest vaccinations for each country?
 WITH vaccinations_ranked AS(
 SELECT *,
 	RANK() OVER(PARTITION BY Country ORDER BY num_vaccinations) as rk
@@ -165,7 +158,7 @@ WHERE
 
 
 
--- moving average
+-- What is the 3 month moving average vaccination for each country?
 SELECT *,
   ROUND(AVG(num_vaccinations) OVER(PARTITION BY Country ORDER BY Month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ),0)
    AS moving_average
