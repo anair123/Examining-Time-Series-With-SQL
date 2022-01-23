@@ -35,7 +35,7 @@ FROM #Monthly_Vaccinations
 
 
 
--- Cummulative (running total) vaccinations
+-- 1. What is the cummulative (running total) vaccinations for each country?
 SELECT 
 	Country,
 	Year,
@@ -45,7 +45,7 @@ SELECT
 FROM 
 	#Monthly_Vaccinations
 
--- Create table that show population of each country
+-- Create table that shows population of each country
 DROP TABLE IF EXISTS Population
 CREATE TABLE Population(
 Country varchar(50),
@@ -62,7 +62,7 @@ VALUES
 SELECT *
 FROM Population
 
--- Which country has been the most successful in administering vaccines?
+-- 1. Which country has been the most successful in administering vaccines?
 
 -- CTE for storing running total
 WITH running_total AS(
@@ -104,7 +104,7 @@ WHERE
 ORDER BY 
 	Vaccinations_per_100k_capita DESC
 
--- What is the running total vaccinations?
+-- 2. What is the running total vaccinations for each country?
 
 WITH running_total AS(
 SELECT 
@@ -128,7 +128,7 @@ FROM running_total R
 INNER JOIN Population P
 	ON R.Country = p.Country
 
--- What is the percent change in vaccinations from month to month?
+-- 3. What is the percent change in vaccinations from month to month?
 WITH prev_count AS(
 SELECT *,
 	ISNULL(LAG(num_vaccinations) OVER(PARTITION BY Country ORDER BY Month),0) AS prev_vaccination
@@ -139,7 +139,7 @@ SELECT *,
 FROM prev_count
 
 
--- Which months registered the fewest vaccinations for each country?
+-- 4. Which months registered the fewest vaccinations for each country (Worst 3 months)?
 WITH vaccinations_ranked AS(
 SELECT *,
 	RANK() OVER(PARTITION BY Country ORDER BY num_vaccinations) as rk
@@ -158,7 +158,7 @@ WHERE
 
 
 
--- What is the 3 month moving average vaccination for each country?
+-- 5. What is the 3 month moving average vaccination for each country?
 SELECT *,
   ROUND(AVG(num_vaccinations) OVER(PARTITION BY Country ORDER BY Month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ),0)
    AS moving_average
